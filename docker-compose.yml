@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # Cấu hình cho Database PostgreSQL
+  postgres:
+    image: postgres:15-alpine # Dùng bản alpine cho nhẹ máy
+    container_name: jobradar_postgres
+    environment:
+      POSTGRES_USER: postgres       # Username đăng nhập (mặc định)
+      POSTGRES_PASSWORD: root       # Password đăng nhập
+      POSTGRES_DB: jobradar_db      # Tên database sẽ tự động được tạo ra
+    ports:
+      - "5432:5432"                 # Mở cổng 5432 ra máy tính thực (Windows) của bạn
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Lưu lại dữ liệu (Data) để khi tắt máy tính không bị mất DB
+    restart: unless-stopped         # Tự động chạy lại khi khởi động máy hoặc có lỗi
+
+# Khai báo volume dùng để lưu trữ dữ liệu ổ cứng
+volumes:
+  postgres_data:
