@@ -21,6 +21,8 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    private final com.jobradar.auth.security.CustomOAuth2UserService customOAuth2UserService;
+    private final com.jobradar.auth.security.OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -39,6 +41,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
+            .cors(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 // Cho phép gọi API đăng nhập/đăng ký và cho phép Spring Boot hiển thị đúng mã lỗi ở endpoint /error
                 .requestMatchers("/api/v1/auth/**", "/error").permitAll() 
@@ -47,6 +50,18 @@ public class SecurityConfig {
             // Không lưu trạng thái session (Stateless) vì mỗi request đều bắt buộc gửi kèm JWT
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
+            .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(auth -> auth
+                    .baseUri("/oauth2/authorize")
+                )
+                .redirectionEndpoint(redirection -> redirection
+                    .baseUri("/login/oauth2/code/*")
+                )
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService)
+                )
+                .successHandler(oAuth2AuthenticationSuccessHandler)
+            )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

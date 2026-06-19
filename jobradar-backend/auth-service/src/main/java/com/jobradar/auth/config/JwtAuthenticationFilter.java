@@ -17,8 +17,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -64,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             // Token hết hạn hoặc sai định dạng sẽ bay vào đây
-            System.out.println("Lỗi xác thực JWT: " + e.getMessage());
+            log.error("Lỗi xác thực JWT: {}", e.getMessage());
         }
 
         // Chuyển request đi tiếp

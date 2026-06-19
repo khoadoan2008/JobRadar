@@ -37,4 +37,20 @@ public class AuthController {
     public ResponseEntity<UserProfileResponse> getMyProfile() {
         return ResponseEntity.ok(authService.getMyProfile());
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(@RequestBody com.jobradar.auth.dto.TokenRefreshRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        // Lấy thông tin user hiện tại từ SecurityContext
+        org.springframework.security.core.userdetails.UserDetails userDetails = 
+            (org.springframework.security.core.userdetails.UserDetails) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        authService.logout(userDetails.getUsername());
+        
+        return ResponseEntity.ok(java.util.Map.of("message", "Đăng xuất thành công"));
+    }
 }

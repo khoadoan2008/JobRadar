@@ -32,6 +32,10 @@ node_modules/
 dist/
 .env
 
+# Maven build outputs
+target/
+
+
 # IDEs
 .idea/
 *.iml

@@ -28,12 +28,14 @@ public class AuthServiceImpl implements AuthService {
     private final CandidateProfileRepository profileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService; // Thêm JwtService để sinh Token thật
+    private final RefreshTokenService refreshTokenService;
+    private final EmailService emailService;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
         // 1. Kiểm tra email tồn tại
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email đã được sử dụng!");
+            throw new com.jobradar.auth.exception.DuplicateResourceException("Email đã được sử dụng!");
         }
 
         // 2. Tạo đối tượng User mới
@@ -44,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 3. Lấy Role "ROLE_CANDIDATE" và gán cho User
         Role candidateRole = roleRepository.findByName("ROLE_CANDIDATE")
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy quyền ROLE_CANDIDATE trong Database"));
+                .orElseThrow(() -> new com.jobradar.auth.exception.ResourceNotFoundException("Không tìm thấy quyền ROLE_CANDIDATE trong Database"));
         Set<Role> roles = new HashSet<>();
         roles.add(candidateRole);
         user.setRoles(roles);
@@ -61,30 +63,38 @@ public class AuthServiceImpl implements AuthService {
         // nó sẽ tự động lưu cả User và CandidateProfile xuống 2 bảng cùng lúc.
         User savedUser = userRepository.save(user);
 
+        // --- Bắt đầu Test Webhook Gửi Email ---
+        // Tạm thời sinh mã Token giả lập (UUID) để test Webhook
+        String dummyToken = java.util.UUID.randomUUID().toString();
+        emailService.sendVerificationEmail(savedUser.getEmail(), dummyToken);
+        // -------------------------------------
+
         // 6. Tạo JWT Token thật từ email của user
         String jwtToken = jwtService.generateToken(user.getEmail());
+        String refreshToken = refreshTokenService.createRefreshToken(savedUser.getId()).getToken();
 
         // 7. Trả về Response thành công
-        return new AuthResponse("Đăng ký thành công", jwtToken, savedUser.getId());
+        return new AuthResponse("Đăng ký thành công", jwtToken, refreshToken, savedUser.getId());
     }
 
     @Override
     public AuthResponse login(LoginRequest request) {
         // 1. Tìm User theo email   
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Sai email hoặc mật khẩu!"));
+                .orElseThrow(() -> new com.jobradar.auth.exception.UnauthorizedException("Sai email hoặc mật khẩu!"));
 
         // 2. So sánh mật khẩu
         // matches(mật_khẩu_gõ_vào, mật_khẩu_đã_mã_hóa_trong_DB)
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Sai email hoặc mật khẩu!");
+            throw new com.jobradar.auth.exception.UnauthorizedException("Sai email hoặc mật khẩu!");
         }
 
         // 3. Nếu thành công, tạo JWT Token thật
         String jwtToken = jwtService.generateToken(user.getEmail());
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId()).getToken();
 
         // 4. Trả về thông tin và Token
-        return new AuthResponse("Đăng nhập thành công", jwtToken, user.getId());
+        return new AuthResponse("Đăng nhập thành công", jwtToken, refreshToken, user.getId());
     }
 
     @Override
@@ -107,5 +117,25 @@ public class AuthServiceImpl implements AuthService {
                 fullName,
                 roles
         );
+    }
+
+    @Override
+    public AuthResponse refreshToken(com.jobradar.auth.dto.TokenRefreshRequest request) {
+        return refreshTokenService.findByToken(request.getRefreshToken())
+                .map(refreshTokenService::verifyExpiration)
+                .map(com.jobradar.auth.entity.RefreshToken::getUser)
+                .map(user -> {
+                    String token = jwtService.generateToken(user.getEmail());
+                    return new AuthResponse("Làm mới token thành công", token, request.getRefreshToken(), user.getId());
+                })
+                .orElseThrow(() -> new com.jobradar.auth.exception.TokenRefreshException(request.getRefreshToken(),
+                        "Refresh token is not in database!"));
+    }
+
+    @Override
+    public void logout(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            refreshTokenService.deleteByUserId(user.getId());
+        });
     }
 }

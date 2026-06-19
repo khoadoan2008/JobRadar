@@ -104,3 +104,89 @@ Quá trình Scraping bản chất là một trò chơi "Mèo vờn chuột", do 
 2.  **Real-time Notifications:** Sử dụng WebSocket để bắn thông báo tức thì (chuông báo đỏ) khi trạng thái hồ sơ thay đổi.
 
 ---
+
+## 7. Kế Hoạch Triển Khai: Email Service & Xác Thực
+*Ghi chú: Giải pháp sử dụng Google Apps Script làm Webhook để gửi email, tích hợp qua OpenFeign.*
+
+### 7.1. Setup Infrastructure (Hạ tầng Email)
+1.  **Google Apps Script:** Tạo script mới tại `script.google.com` và Deploy as Web App để lấy Webhook URL.
+2.  **Tích hợp OpenFeign:** Tạo `GoogleEmailClient.java` (trong `auth-service`) để gọi HTTP POST đến Webhook URL thay cho RestTemplate.
+3.  **Tạo DTO:** `EmailRequest.java` (gồm các trường: to, subject, body, isHtml).
+4.  **Cấu hình:** Thêm biến môi trường `webhook.email.url` vào `application.properties`.
+
+### 7.2. Email Verification & Security (Flow Xác Thực)
+1.  **Cập nhật User Entity:** Thêm trường `emailVerified` (Boolean).
+2.  **Tạo Token Entities:** Tạo `EmailVerificationToken` và `PasswordResetToken` (chứa các thông tin: token, user_id, expiryDate).
+3.  **Bổ sung API Endpoints:**
+    *   `POST /api/v1/auth/forgot-password`: Nhập email, tạo reset token và gửi link qua email.
+    *   `POST /api/v1/auth/reset-password`: Xác nhận token và đổi mật khẩu mới.
+    *   `GET /api/v1/auth/verify-email?token=xxx`: Click từ email để cập nhật `emailVerified = true`.
+4.  **Cập nhật Logic Core:**
+    *   **Register:** Đăng ký thành công -> Tạo token -> Gửi email xác thực.
+    *   **Login:** Phải kiểm tra `emailVerified == true` trước khi cho phép đăng nhập và cấp JWT.
+
+### 7.3. Cảnh Báo Việc Làm - Job Alert (Thuộc Phase 3 / Job Service)
+*Lưu ý Kiến trúc: Theo chuẩn Microservices, phần này sẽ được tách ra khỏi Auth Service và đặt ở Job Service hoặc Notification Service.*
+1.  **Entity Mới:** `JobAlertSubscription` (chứa user_id, keywords, location).
+2.  **API CRUD:** Cho phép người dùng đăng ký, sửa, xóa từ khóa nhận thông báo.
+3.  **RabbitMQ & Crawler Integration:** 
+    *   Khi Crawler gom được việc làm mới -> Đẩy thông báo (Event) vào RabbitMQ.
+    *   Worker đọc Event -> Kiểm tra (Match) với các `JobAlertSubscription` -> Gửi Email hàng loạt bằng Webhook.
+
+---
+
+## 8. Tầm Nhìn Kiến Trúc V2 & Cân Nhắc Kỹ Thuật (Architecture Gaps)
+*Ghi chú: Đây là bản thiết kế lý tưởng (Best Practices) để tối ưu hóa hệ thống. Chúng ta sẽ làm bản MVP (Phase 1) cho chạy được trước, sau đó refactor dần theo hướng này để có tư duy System Design tốt nhất cho phỏng vấn.*
+
+### 8.1. Phân định Ranh giới Service (Service Boundary: Auth vs User)
+*   **Vấn đề:** Hiện tại `Auth Service` đang gánh cả `User` và `CandidateProfile`. Khi mở rộng có thêm `CompanyProfile`, `AdminProfile` thì service này sẽ phình to.
+*   **Giải pháp (V2):** Tách thành 2 service độc lập:
+    *   `Auth Service`: Chỉ lo Đăng nhập, Đăng ký, Cấp phát Token, OAuth2.  
+    *   `User Service`: Quản lý toàn bộ Profile thông tin chi tiết (Ứng viên, Công ty, Admin).
+
+### 8.2. Kế hoạch tách Notification Service (Email System)
+*   **Tình trạng hiện tại (Phase 1):** Tích hợp cứng logic gửi Email vào trong `auth-service` để phục vụ nhanh luồng đăng ký. Dùng Google Apps Script làm Webhook.
+*   **Dấu hiệu CẦN TÁCH (Khi nào nên làm?):**
+    1. Khi bắt đầu phát triển tính năng **Job Alert (Cảnh báo việc làm)** ở `job-service`. Chức năng này đòi hỏi gửi mail hàng loạt, nếu gọi chéo sang `auth-service` sẽ làm sập server đăng nhập.
+    2. Khi hệ thống bị "nghẽn cổ chai" (Bottleneck): Nút đăng ký xoay vòng quá 3 giây do chờ HTTP request từ Google phản hồi.
+*   **Lộ trình thực hiện tách Service (Phase 2):**
+    *   **Bước 1:** Khởi tạo Spring Boot module `notification-service`.
+    *   **Bước 2:** Setup RabbitMQ bằng Docker. Khai báo Exchange và Queue (ví dụ: `email_verification_queue`, `job_alert_queue`).
+    *   **Bước 3:** Ở `auth-service`, gỡ bỏ hoàn toàn OpenFeign gọi Google. Thay vào đó, sau khi đăng ký thành công, bắn một Event (dạng JSON) vào `email_verification_queue`.
+    *   **Bước 4:** Ở `notification-service`, viết một @RabbitListener để hứng Event, xử lý logic lấy data và gọi API gửi Email.
+    *   **Bước 5 (Nâng cấp Pro):** Thay Google Webhook bằng **SendGrid / AWS SES** cho Prod và dùng **MailHog** cho môi trường Local.
+    *   **Bước 6 (Priority Queue & Template Engine):** Thiết lập 2 Queue riêng biệt: `email.priority` (cho xác thực/reset pass, cần gửi ngay) và `email.bulk` (cho job alert, gửi từ từ). Tích hợp **Thymeleaf/FreeMarker** vào `notification-service` để render giao diện email. `auth-service` lúc này chỉ cần gửi data thô: `template="verify-email", params={token, url}` thay vì gửi cả cục HTML.
+    *   **Bước 7 (Observability & Reliability):** Tích hợp Prometheus/Grafana để đo lường Metrics (`email.sent`, `email.failed`, `queue.lag`). Xây dựng cơ chế **DLQ (Dead Letter Queue) + Retry Policy** với Exponential Backoff (thử lại sau 1m, 5m, 15m, 1h). Mở Endpoint Health Check (`/actuator/health`) cho Docker/Kubernetes.
+
+### 8.3. Tối ưu Thuật toán Job Alert
+*   **Vấn đề:** Khi Crawler bắt được 1 Job mới, nếu Worker đi quét toàn bộ `JobAlertSubscription` để match từ khóa thì độ phức tạp là `O(N*M)`, cực kỳ chậm và tốn tài nguyên server.
+*   **Giải pháp (V2):** Xây dựng **Inverted Index** (lập chỉ mục ngược: keyword -> list user_ids) hoặc đồng bộ dữ liệu sang **Elasticsearch** để truy vấn siêu tốc.
+
+### 8.4. Giao tiếp giữa các Service (Inter-Service Communication)
+*   **Vấn đề:** Mới chỉ là ý tưởng gọi nội bộ cơ bản. Chưa có cơ chế quản lý lỗi khi 1 service lăn đùng ra chết.
+*   **Giải pháp (V2):**
+    *   Sử dụng **Service Discovery (Eureka/Consul)** để tự động nhận diện địa chỉ IP các service.
+    *   Sử dụng **Circuit Breaker (Resilience4j)** để ngắt kết nối tránh sập dây chuyền (Cascading Failure).
+    *   Gateway validate JWT cần cơ chế đồng bộ key (Shared Secret hoặc JWKS endpoint) từ Auth Service.
+
+### 8.5. Tính nhất quán Dữ liệu Phân tán (Data Consistency)
+*   **Vấn đề:** Khi Company tạo một Job (ở Job Service), cần xác thực Company đó có tồn tại hay không (thuộc Auth/User Service). Nếu 1 giao dịch bị lỗi giữa chừng ở 1 service thì sao?
+*   **Giải pháp (V2):** Áp dụng **Saga Pattern** hoặc Eventual Consistency thông qua RabbitMQ để đảm bảo giao dịch phân tán thành công trọn vẹn hoặc tự động rollback lại các hành động (Compensating Transaction).
+
+### 8.6. Kiến Trúc Microservices Đề Xuất (V2)
+```text
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Gateway   │────▶│ Auth Service │     │ User Service │
+│ (Port 8080) │     │ (Port 8081) │     │ (Port 8082) │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                   │                   │
+       ▼                   ▼                   ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ Job Service │◀───▶│ Crawler Svc │     │Notification │
+│ (Port 8083) │     │ (Port 8084) │     │  Service    │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                   │                   │
+       ▼                   ▼                   ▼
+  PostgreSQL          Redis/RabbitMQ        Email/WS
+   (Jobs)              (Queue/Cache)         (Webhook)
+```
