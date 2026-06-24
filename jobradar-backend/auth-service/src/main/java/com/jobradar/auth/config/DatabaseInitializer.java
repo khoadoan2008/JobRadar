@@ -17,9 +17,18 @@ import java.util.List;
 public class DatabaseInitializer implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Override
     public void run(String... args) throws Exception {
+        // Tự động gỡ bỏ ràng buộc NOT NULL của cột password dưới Database
+        try {
+            jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN password DROP NOT NULL");
+            System.out.println("✅ Đã tự động gỡ bỏ ràng buộc NOT NULL cho cột password!");
+        } catch (Exception e) {
+            System.out.println("ℹ️ Bỏ qua gỡ bỏ ràng buộc password: " + e.getMessage());
+        }
+
         // Kiểm tra xem trong bảng 'roles' đã có dữ liệu nào chưa
         if (roleRepository.count() == 0) {
             Role adminRole = new Role();

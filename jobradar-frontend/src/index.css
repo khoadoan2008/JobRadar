@@ -1,4 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --bg-primary: #0a0e17;
@@ -255,4 +260,66 @@ body {
   color: var(--text-primary);
   font-size: 1.125rem;
   font-weight: 500;
+}
+
+@layer components {
+  .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  }
+  .mesh-bg {
+      background-color: #020617;
+      background-image: 
+          radial-gradient(at 0% 0%, hsla(222,47%,11%,1) 0, transparent 50%), 
+          radial-gradient(at 100% 0%, hsla(217,91%,60%,0.08) 0, transparent 50%), 
+          radial-gradient(at 100% 100%, hsla(222,47%,11%,1) 0, transparent 50%), 
+          radial-gradient(at 0% 100%, hsla(217,91%,60%,0.05) 0, transparent 50%);
+  }
+  .glass-card {
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+  .input-glow:focus-within {
+      box-shadow: 0 0 0 1px rgba(0, 82, 255, 0.3), 0 0 12px rgba(0, 82, 255, 0.1);
+  }
+  .btn-premium {
+      background: linear-gradient(135deg, #0052ff 0%, #0040cc 100%);
+      box-shadow: 0 4px 14px 0 rgba(0, 82, 255, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-premium:hover {
+      box-shadow: 0 6px 20px rgba(0, 82, 255, 0.4);
+      transform: translateY(-1px);
+  }
+  .animate-radar {
+      animation: radar-pulse 3s infinite ease-out;
+  }
+  .glass-nav {
+      background: rgba(11, 28, 48, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+  }
+  .radar-pulse-home {
+      animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  }
+  .bento-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bento-card:hover {
+      transform: translateY(-4px);
+      background: rgba(31, 45, 64, 1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(.33); opacity: 0.8; }
+    80%, 100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes radar-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.8; }
 }

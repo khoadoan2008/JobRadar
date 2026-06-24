@@ -99,17 +99,28 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserProfileResponse getMyProfile() {
-        // Do JwtAuthenticationFilter đã nạp User vào Context, ta có thể lấy ra dễ dàng
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        // Nếu chưa đăng nhập (Spring Security trả về anonymousUser dưới dạng String)
+        if (principal instanceof String && "anonymousUser".equals(principal)) {
+            throw new com.jobradar.auth.exception.UnauthorizedException("Người dùng chưa được xác thực hoặc Token không hợp lệ!");
+        }
+
+        User userPrincipal = (User) principal;
+        
+        // Truy vấn lại từ DB để gắn vào Session hiện tại, tránh lỗi LazyInitializationException
+        User currentUser = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new com.jobradar.auth.exception.ResourceNotFoundException("Không tìm thấy tài khoản trong hệ thống"));
 
         String roles = currentUser.getRoles().stream()
                 .map(Role::getName)
                 .reduce((a, b) -> a + ", " + b)
                 .orElse("");
 
+        // Cập nhật tên: Nếu là user đăng nhập qua MXH chưa tạo profile thì để tạm là "Thành viên mới" thay vì "Admin"
         String fullName = currentUser.getCandidateProfile() != null 
                 ? currentUser.getCandidateProfile().getFullName() 
-                : "Admin";
+                : "Thành viên mới";
 
         return new UserProfileResponse(
                 currentUser.getId(),

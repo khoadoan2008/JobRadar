@@ -8,7 +8,7 @@
 - **Kinh nghiệm hiện tại:** Đang ở mức cơ bản. Hiểu cấu trúc API, Controller, Entity. Chưa có kinh nghiệm về thực tế về DevOps, CI/CD, Docker hoặc các quy trình triển khai (deploy) server thực tế.
 
 ## 2. TECH STACK (Công nghệ sử dụng trong dự án)
-- **Frontend:** React JS (Sử dụng Vite, chạy bằng lệnh `npm run dev`).
+- **Frontend:** React JS (Sử dụng Vite, Tailwind CSS, chạy bằng lệnh `npm run dev`).
 
 - **Backend:** Java Spring Boot (Mô hình RESTful API, Microservices, Spring Cloud Gateway, JPA/Hibernate).
 

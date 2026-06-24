@@ -103,6 +103,9 @@ Quá trình Scraping bản chất là một trò chơi "Mèo vờn chuột", do 
 
 2.  **Real-time Notifications:** Sử dụng WebSocket để bắn thông báo tức thì (chuông báo đỏ) khi trạng thái hồ sơ thay đổi.
 
+3.  **Protected Routes & Multi-page Auth Guard (ReactJS):** Xây dựng component `ProtectedRoute` dùng chung (Reusable Route Guard) để bao bọc bảo vệ tất cả các trang nội bộ (như Dashboard, CV Builder, Kanban Board, Employer Portal...), tự động chặn truy cập và chuyển hướng về `/login` nếu không tìm thấy Access Token trong `localStorage`.
+
+
 ---
 
 ## 7. Kế Hoạch Triển Khai: Email Service & Xác Thực
