@@ -19,9 +19,9 @@
 - **Khác:** Web Scraping (JSoup, FlareSolverr), WebSocket, Docker.
 
 ## 3. PROJECT SCOPE (Phạm vi dự án hiện tại)
-- **Tên dự án:** JobRadar (Hệ Sinh Thái Tuyển Dụng & Cảnh Báo Việc Làm IT).
+- **Tên dự án:** JobRadar (Hệ Sinh Thái Tuyển Dụng & Cảnh Báo Việc Làm Đa Ngành).
 
-- **Mô tả:** Hệ thống tự động thu thập (crawl) tin tuyển dụng IT từ nhiều nguồn (VietnamWorks, TopCV, ITviec), tập trung về một nền tảng với kiến trúc Microservices.
+- **Mô tả:** Hệ thống tự động thu thập (crawl) tin tuyển dụng đa ngành nghề (IT, văn phòng, lao động phổ thông, thực tập...) từ nhiều nguồn (VietnamWorks, TopCV, Việc Làm Tốt), tập trung về một nền tảng với kiến trúc Microservices.
 
 - **Các Phân hệ chính:** 
 

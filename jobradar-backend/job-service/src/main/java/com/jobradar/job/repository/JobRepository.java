@@ -8,8 +8,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long> {
+
+    Optional<Job> findByJobUrl(String jobUrl);
 
     // Tìm kiếm phân trang theo từ khóa (tiêu đề, công ty, kỹ năng) và địa điểm
     @Query("SELECT j FROM Job j WHERE " +

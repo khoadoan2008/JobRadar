@@ -118,15 +118,26 @@ public class AuthServiceImpl implements AuthService {
                 .orElse("");
 
         // Cập nhật tên: Nếu là user đăng nhập qua MXH chưa tạo profile thì để tạm là "Thành viên mới" thay vì "Admin"
-        String fullName = currentUser.getCandidateProfile() != null 
-                ? currentUser.getCandidateProfile().getFullName() 
-                : "Thành viên mới";
+        String fullName = "Thành viên mới";
+        String phone = null;
+        String avatarUrl = null;
+        String skills = null;
+        
+        if (currentUser.getCandidateProfile() != null) {
+            fullName = currentUser.getCandidateProfile().getFullName();
+            phone = currentUser.getCandidateProfile().getPhone();
+            avatarUrl = currentUser.getCandidateProfile().getAvatarUrl();
+            skills = currentUser.getCandidateProfile().getSkills();
+        }
 
         return new UserProfileResponse(
                 currentUser.getId(),
                 currentUser.getEmail(),
                 fullName,
-                roles
+                roles,
+                phone,
+                avatarUrl,
+                skills
         );
     }
 

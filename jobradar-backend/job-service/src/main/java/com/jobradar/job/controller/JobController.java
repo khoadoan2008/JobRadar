@@ -1,7 +1,9 @@
 package com.jobradar.job.controller;
 
+import com.jobradar.job.dto.JobRequest;
 import com.jobradar.job.entity.Job;
 import com.jobradar.job.service.JobService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +41,20 @@ public class JobController {
 
     // API tạo mới công việc (Dùng cho test hoặc crawler đẩy lên)
     @PostMapping
-    public ResponseEntity<Job> createJob(@RequestBody Job job) {
-        return ResponseEntity.ok(jobService.createJob(job));
+    public ResponseEntity<Job> createJob(@Valid @RequestBody JobRequest jobRequest) {
+        return ResponseEntity.ok(jobService.createJob(jobRequest));
+    }
+
+    // API cập nhật công việc theo ID
+    @PutMapping("/{id}")
+    public ResponseEntity<Job> updateJob(@PathVariable Long id, @Valid @RequestBody JobRequest jobRequest) {
+        return ResponseEntity.ok(jobService.updateJob(id, jobRequest));
+    }
+
+    // API xóa công việc theo ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteJob(@PathVariable Long id) {
+        jobService.deleteJob(id);
+        return ResponseEntity.noContent().build();
     }
 }

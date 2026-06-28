@@ -47,7 +47,42 @@ File này dùng để theo dõi tất cả các vấn đề (Issues), các tính
 *(Chưa có issue nào. Sẽ bổ sung khi phát triển).*
 
 ## 💼 Phân hệ: Job Service (Quản lý việc làm)
-*(Chưa có issue nào. Sẽ bổ sung khi phát triển).*
+
+### 1. ⚙️ CRUD API & Validation
+- [x] Tạo thực thể `Job` ánh xạ xuống database.
+- [x] Viết API GET (tìm kiếm phân trang theo từ khóa và địa điểm), GET /{id} (chi tiết tin).
+- [x] Viết API POST (tạo mới tin tuyển dụng).
+- [x] Bổ sung API PUT (cập nhật tin tuyển dụng) và DELETE (xóa tin tuyển dụng) để hoàn thiện CRUD.
+- [x] Tạo `JobRequest` DTO tách biệt dữ liệu đầu vào và Entity.
+- [x] Tích hợp `jakarta.validation` để validate dữ liệu đầu vào (không để trống title, companyName, location; đúng định dạng URL cho jobUrl).
+
+### 2. 🚨 Error Handling (Xử lý lỗi)
+- [x] Tạo custom `ResourceNotFoundException`.
+- [x] Xây dựng `GlobalExceptionHandler` dùng `@RestControllerAdvice` để format JSON lỗi thống nhất.
+- [x] Bổ sung bộ xử lý lỗi Validation (`MethodArgumentNotValidException`) để trả lỗi chi tiết về client.
+
+### 3. ⚡ Redis Caching (Tối ưu truy xuất)
+- [x] Thêm cấu hình Container `redis` Alpine trong `docker-compose.yml` ở cổng 6379.
+- [x] Tích hợp `spring-boot-starter-data-redis` vào `pom.xml`.
+- [x] Cho phép `Job` entity implements `Serializable` để tuần tự hóa dữ liệu ghi xuống Redis.
+- [x] Sử dụng `@Cacheable` cho API GET chi tiết, `@CachePut` cho API PUT cập nhật và `@CacheEvict` cho API DELETE để xóa cache tương ứng.
+
+### 4. 🧪 Testing & CI/CD (Kế hoạch sắp tới)
+- [ ] Viết Unit Test cho `JobServiceImpl` bằng Mockito.
+- [ ] Viết Integration Test cho `JobController` bằng MockMvc.
 
 ## 🕷️ Phân hệ: Crawler Service (Thu thập dữ liệu)
-*(Chưa có issue nào. Sẽ bổ sung khi phát triển).*
+
+### 1. ⚙️ Module Setup & Routing
+- [x] Khởi tạo module độc lập `crawler-service` chạy ở cổng 8084.
+- [x] Cấu hình định tuyến và bỏ qua xác thực cho API `/api/v1/crawler/**` ở API Gateway.
+- [x] Tạo `JobRequest` DTO đồng bộ dữ liệu với `job-service`.
+- [x] Thiết lập `JobClient` sử dụng OpenFeign để gọi POST sang `job-service`.
+
+### 2. 🕷️ Crawler Strategies (Các bộ cào tin)
+- [x] Định nghĩa interface chung `JobCrawler` theo Strategy Pattern.
+- [x] Triển khai thành công bộ cào tin `ChoTotCrawler` lấy tin từ API JSON công khai của Chợ Tốt.
+- [x] Tạo `CrawlerController` cung cấp API `/api/v1/crawler/crawl` để trigger bộ cào thủ công.
+- [ ] Triển khai bộ cào HTML `VietnamWorksCrawler` sử dụng JSoup.
+- [ ] Triển khai bộ cào HTML `TopCVCrawler` sử dụng JSoup.
+- [ ] Tích hợp **FlareSolverr** qua Docker để vượt Cloudflare cào tin từ ITviec.

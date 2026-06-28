@@ -34,17 +34,15 @@ public class RefreshTokenService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        // Delete existing refresh token to prevent multiple active tokens for the same user
-        refreshTokenRepository.deleteByUser(user);
+        // Thay vì xóa đi tạo mới dẫn tới lỗi Hibernate Action Order (lệnh delete chạy sau lệnh insert),
+        // ta tìm xem user đã có token chưa. Nếu có rồi thì cập nhật lại token và expiryDate mới, nếu chưa có thì tạo mới.
+        RefreshToken refreshToken = refreshTokenRepository.findByUser(user)
+                .orElseGet(() -> RefreshToken.builder().user(user).build());
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .expiryDate(Instant.now().plusMillis(refreshTokenDurationMs))
-                .token(UUID.randomUUID().toString())
-                .build();
+        refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
 
-        refreshToken = refreshTokenRepository.save(refreshToken);
-        return refreshToken;
+        return refreshTokenRepository.save(refreshToken);
     }
 
     public RefreshToken verifyExpiration(RefreshToken token) {

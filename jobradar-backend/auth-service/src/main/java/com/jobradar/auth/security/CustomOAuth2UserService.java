@@ -3,6 +3,7 @@ package com.jobradar.auth.security;
 import com.jobradar.auth.entity.AuthProvider;
 import com.jobradar.auth.entity.Role;
 import com.jobradar.auth.entity.User;
+import com.jobradar.auth.entity.CandidateProfile;
 import com.jobradar.auth.repository.RoleRepository;
 import com.jobradar.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -72,6 +73,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Role userRole = roleRepository.findByName("ROLE_CANDIDATE")
                 .orElseThrow(() -> new com.jobradar.auth.exception.ResourceNotFoundException("Error: Role CANDIDATE is not found."));
         user.setRoles(Collections.singleton(userRole));
+
+        // Tự động tạo CandidateProfile liên kết với User mới đăng ký qua OAuth2
+        CandidateProfile profile = new CandidateProfile();
+        profile.setUser(user);
+        profile.setFullName(oAuth2UserInfo.getName());
+        profile.setAvatarUrl(oAuth2UserInfo.getImageUrl());
+        user.setCandidateProfile(profile);
 
         return userRepository.save(user);
     }

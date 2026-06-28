@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,20 +14,22 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "jobs")
-public class Job {
+public class Job implements Serializable {
+    private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String title;
 
-    @Column(name = "company_name", nullable = false)
+    @Column(name = "company_name", nullable = false, length = 500)
     private String companyName;
 
-    @Column(name = "company_logo")
+    @Column(name = "company_logo", columnDefinition = "TEXT")
     private String companyLogo;
 
+    @Column(columnDefinition = "TEXT")
     private String location;
 
     private String salary;
@@ -43,7 +46,7 @@ public class Job {
     @Column(columnDefinition = "TEXT")
     private String skills; // Lưu chuỗi phân cách bởi dấu phẩy, vd: "Java, Spring Boot, SQL"
 
-    @Column(name = "job_url")
+    @Column(name = "job_url", columnDefinition = "TEXT")
     private String jobUrl; // Đường dẫn đến bài đăng gốc
 
     private String provider; // TOPCV, VIETNAMWORKS, ITVIEC...

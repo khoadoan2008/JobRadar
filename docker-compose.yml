@@ -15,6 +15,14 @@ services:
       - postgres_data:/var/lib/postgresql/data # Lưu lại dữ liệu (Data) để khi tắt máy tính không bị mất DB
     restart: unless-stopped         # Tự động chạy lại khi khởi động máy hoặc có lỗi
 
+  # Cấu hình cho Cache Redis
+  redis:
+    image: redis:7.0-alpine
+    container_name: jobradar_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
 # Khai báo volume dùng để lưu trữ dữ liệu ổ cứng
 volumes:
   postgres_data:

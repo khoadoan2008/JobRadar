@@ -323,3 +323,77 @@ body {
   50% { transform: scale(1.1); opacity: 0.3; }
   100% { transform: scale(0.95); opacity: 0.8; }
 }
+
+/* Custom dashboard style from code(1).html */
+.floating-dock {
+    background: rgba(10, 20, 35, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+}
+.dock-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dock-item:hover {
+    transform: translateY(-12px) scale(1.2);
+}
+.neon-glow-blue { filter: drop-shadow(0 0 8px rgba(0, 82, 255, 0.6)); }
+.neon-glow-purple { filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6)); }
+
+.custom-scrollbar::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.gradient-border-glow {
+    position: relative;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid transparent;
+    background-clip: padding-box;
+}
+.gradient-border-glow::before {
+    content: '';
+    position: absolute;
+    top: -1px; bottom: -1px; left: -1px; right: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(0, 82, 255, 0.2), rgba(168, 85, 247, 0.2));
+    transition: opacity 0.3s;
+    opacity: 0.5;
+}
+.gradient-border-glow:hover::before {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(0, 82, 255, 0.8), rgba(168, 85, 247, 0.8));
+}
+
+.skill-bubble {
+    transition: all 0.2s ease;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+}
+.skill-bubble.active {
+    background: rgba(0, 82, 255, 0.2);
+    border-color: rgba(0, 82, 255, 0.5);
+    box-shadow: 0 0 15px rgba(0, 82, 255, 0.3);
+    color: white;
+}
+
+.timeline-line {
+    width: 2px;
+    background: linear-gradient(to bottom, #0052ff, #a855f7, transparent);
+}
+
+@keyframes radar-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.radar-line {
+    animation: radar-spin 4s linear infinite;
+}
+

@@ -12,4 +12,7 @@ public class UserProfileResponse {
     private String email;
     private String fullName;
     private String roles;
+    private String phone;
+    private String avatarUrl;
+    private String skills;
 }
