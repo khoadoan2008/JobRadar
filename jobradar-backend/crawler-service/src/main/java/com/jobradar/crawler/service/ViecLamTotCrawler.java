@@ -21,8 +21,8 @@ public class ViecLamTotCrawler implements JobCrawler {
 
     @Override
     public void crawl() {
-        log.info("🚀 Bắt đầu cào dữ liệu từ Việc Làm Tốt (Chợ Tốt)...");
-        // Gọi API gateway của Chợ Tốt trực tiếp như ChoTotCrawler cũ (cg=13000 là danh mục việc làm chung)
+        log.info("🚀 Bắt đầu cào dữ liệu từ Việc Làm Tốt...");
+        // Gọi API gateway trực tiếp (cg=13000 là danh mục việc làm chung)
         String url = "https://gateway.chotot.com/v1/public/ad-listing?cg=13000&limit=50";
         
         try {
@@ -36,7 +36,7 @@ public class ViecLamTotCrawler implements JobCrawler {
                         String title = ad.path("subject").asText();
                         String companyName = ad.path("company_name").asText();
                         if (companyName == null || companyName.trim().isEmpty() || "null".equals(companyName)) {
-                            companyName = ad.path("account_name").asText("Nhà tuyển dụng Chợ Tốt");
+                            companyName = ad.path("account_name").asText("Nhà tuyển dụng Việc Làm Tốt");
                         }
                         
                         // Chuẩn hóa địa chỉ: area_name (Quận/Huyện) + region_name (Tỉnh/Thành phố)
@@ -83,10 +83,10 @@ public class ViecLamTotCrawler implements JobCrawler {
                                 .salary(salary)
                                 .jobType(jobType)
                                 .description(description)
-                                .requirements("Ứng viên vui lòng xem mô tả chi tiết tại link gốc Chợ Tốt.")
+                                .requirements("Ứng viên vui lòng xem mô tả chi tiết tại link gốc Việc Làm Tốt.")
                                 .skills(skills)
                                 .jobUrl(jobUrl)
-                                .provider("CHOTOT") // Đặt provider là CHOTOT tương tự như crawler cũ để đồng bộ hệ thống
+                                .provider("VIECLAMTOT") // Đặt provider là VIECLAMTOT để đồng bộ hệ thống
                                 .build();
                         
                         jobClient.createJob(jobRequest);

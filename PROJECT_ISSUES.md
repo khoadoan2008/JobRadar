@@ -81,7 +81,7 @@ File này dùng để theo dõi tất cả các vấn đề (Issues), các tính
 
 ### 2. 🕷️ Crawler Strategies (Các bộ cào tin)
 - [x] Định nghĩa interface chung `JobCrawler` theo Strategy Pattern.
-- [x] Triển khai thành công bộ cào tin `ChoTotCrawler` lấy tin từ API JSON công khai của Chợ Tốt.
+- [x] Triển khai thành công bộ cào tin `ViecLamTotCrawler` lấy tin từ API JSON công khai của Việc Làm Tốt.
 - [x] Tạo `CrawlerController` cung cấp API `/api/v1/crawler/crawl` để trigger bộ cào thủ công.
 - [ ] Triển khai bộ cào HTML `VietnamWorksCrawler` sử dụng JSoup.
 - [ ] Triển khai bộ cào HTML `TopCVCrawler` sử dụng JSoup.

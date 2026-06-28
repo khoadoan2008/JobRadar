@@ -71,7 +71,7 @@
 
 1.  **Việc Làm Tốt (Dễ nhất - Đa ngành & Lao động phổ thông):**
     *   **Đặc điểm:** Sử dụng Client-Side Rendering (CSR). Dữ liệu được tải động từ một API Gateway công khai.
-    *   **Giải pháp:** Gọi trực tiếp HTTP GET đến endpoint API của Chợ Tốt/Việc Làm Tốt (`https://gateway.chotot.com/v1/public/ad-listing?cg=13000`), phân trang qua offset `o`, nhận payload JSON sạch và dùng thư viện `Jackson` map trực tiếp thành thực thể `Job`. Dữ liệu đa ngành này cực kỳ phong phú và không cần bộ lọc từ khóa cụ thể.
+    *   **Giải pháp:** Gọi trực tiếp HTTP GET đến endpoint API của Việc Làm Tốt (`https://gateway.chotot.com/v1/public/ad-listing?cg=13000`), phân trang qua offset `o`, nhận payload JSON sạch và dùng thư viện `Jackson` map trực tiếp thành thực thể `Job`. Dữ liệu đa ngành này cực kỳ phong phú và không cần bộ lọc từ khóa cụ thể.
 
 2.  **VietnamWorks (Dễ - Đa ngành & Văn phòng):**
     *   **Đặc điểm:** Sử dụng Next.js. Dữ liệu trang được nhúng dưới dạng JSON chuẩn trong thẻ `<script id="__NEXT_DATA__">`.
@@ -93,7 +93,7 @@
 Quá trình Scraping bản chất là một trò chơi "Mèo vờn chuột", do đó kiến trúc code cần đảm bảo tính linh hoạt cực cao:
 
 1.  **Vấn đề thay đổi giao diện (HTML thay đổi):** 
-    *   **Giải pháp:** Áp dụng **Strategy Pattern**. Xây dựng interface chung `JobCrawler` với các class triển khai riêng biệt (`ChoTotCrawler`, `TopCVCrawler`, `VietnamWorksCrawler`). Khi một trang bị lỗi cấu trúc, toàn hệ thống vẫn hoạt động bình thường. 
+    *   **Giải pháp:** Áp dụng **Strategy Pattern**. Xây dựng interface chung `JobCrawler` với các class triển khai riêng biệt (`ViecLamTotCrawler`, `TopCVCrawler`, `VietnamWorksCrawler`). Khi một trang bị lỗi cấu trúc, toàn hệ thống vẫn hoạt động bình thường. 
     *   Các cấu hình CSS Selector hoặc API URL không được hard-code mà lưu vào Database (bảng `crawler_config`) hoặc file cấu hình `application.yml`. Khi web nguồn đổi giao diện, chỉ cần sửa cấu hình trong DB/YML thay vì phải sửa code và build lại toàn bộ server.
 
 2.  **Tránh trùng lặp dữ liệu (Deduplication):**
