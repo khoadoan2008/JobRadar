@@ -145,6 +145,9 @@ public class VietnamWorksCrawler implements JobCrawler {
                             try {
                                 jobClient.createJob(jobRequest);
                                 successCount++;
+                                if (successCount >= 50) {
+                                    break;
+                                }
                             } catch (Exception fe) {
                                 log.error("❌ Lỗi kết nối đến Job Service: {}", fe.getMessage());
                             }
@@ -152,6 +155,12 @@ public class VietnamWorksCrawler implements JobCrawler {
                         } catch (Exception e) {
                             log.error("❌ Lỗi khi xử lý một tin đăng của VietnamWorks: {}", e.getMessage());
                         }
+                        if (successCount >= 50) {
+                            break;
+                        }
+                    }
+                    if (successCount >= 50) {
+                        break;
                     }
                 }
             }
