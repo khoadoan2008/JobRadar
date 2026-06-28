@@ -46,7 +46,7 @@ public class Job implements Serializable {
     @Column(columnDefinition = "TEXT")
     private String skills; // Lưu chuỗi phân cách bởi dấu phẩy, vd: "Java, Spring Boot, SQL"
 
-    @Column(name = "job_url", columnDefinition = "TEXT")
+    @Column(name = "job_url", unique = true, columnDefinition = "TEXT")
     private String jobUrl; // Đường dẫn đến bài đăng gốc
 
     private String provider; // TOPCV, VIETNAMWORKS, ITVIEC...
