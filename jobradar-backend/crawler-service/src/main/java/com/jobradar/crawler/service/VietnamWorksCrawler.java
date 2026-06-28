@@ -23,6 +23,7 @@ public class VietnamWorksCrawler implements JobCrawler {
 
     private final JobClient jobClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
 
     @Override
     public void crawl() {
@@ -69,18 +70,28 @@ public class VietnamWorksCrawler implements JobCrawler {
                     for (JsonNode jobNode : jobsList) {
                         totalParsed++;
                         try {
-                            String title = jobNode.path("title").asText("");
-                            String jobUrl = jobNode.path("url").asText("");
+                            String title = cleanText(jobNode.path("title").asText(""));
+                            
+                            // Tự động dựng jobUrl sạch từ alias (slug không dấu) và jobId để tránh ký tự Unicode đặc biệt
+                            String alias = jobNode.path("alias").asText("").trim();
+                            long jobId = jobNode.path("jobId").asLong(0);
+                            String jobUrl = "";
+                            if (!alias.isEmpty() && jobId > 0) {
+                                jobUrl = "https://www.vietnamworks.com/" + alias + "-" + jobId + "-jv";
+                            } else {
+                                jobUrl = cleanText(jobNode.path("url").asText(""));
+                                if (!jobUrl.startsWith("http") && !jobUrl.isEmpty()) {
+                                    jobUrl = "https://www.vietnamworks.com" + (jobUrl.startsWith("/") ? "" : "/") + jobUrl;
+                                }
+                            }
 
-                            // Kiểm tra các trường dữ liệu bắt buộc
-                            if (title.isEmpty() || jobUrl.isEmpty() || "null".equals(jobUrl)) {
+                            // Kiểm tra các trường dữ liệu bắt buộc ban đầu
+                            if (title.isEmpty() || jobUrl.isEmpty() || "null".equalsIgnoreCase(jobUrl)) {
                                 continue;
                             }
-
-                            // Chuẩn hóa jobUrl (VietnamWorks thường trả về link relative hoặc absolute)
-                            if (!jobUrl.startsWith("http")) {
-                                jobUrl = "https://www.vietnamworks.com" + (jobUrl.startsWith("/") ? "" : "/") + jobUrl;
-                            }
+                            
+                            // Làm sạch khoảng trắng trong URL
+                            jobUrl = jobUrl.replace(" ", "%20");
 
                             // Tránh cào trùng lặp
                             if (processedUrls.contains(jobUrl)) {
@@ -88,26 +99,34 @@ public class VietnamWorksCrawler implements JobCrawler {
                             }
                             processedUrls.add(jobUrl);
 
-                            String companyName = jobNode.path("company").asText("Công ty ẩn danh");
-                            String companyLogo = jobNode.path("logo").asText(null);
-                            if ("null".equals(companyLogo)) {
+                            // Lấy tên công ty và kiểm tra rỗng
+                            String companyName = cleanText(jobNode.path("company").asText(""));
+                            if (companyName.isEmpty() || "null".equalsIgnoreCase(companyName)) {
+                                companyName = "Công ty ẩn danh";
+                            }
+                            
+                            String companyLogo = cleanText(jobNode.path("logo").asText(""));
+                            if (companyLogo.isEmpty() || "null".equalsIgnoreCase(companyLogo)) {
                                 companyLogo = null;
                             }
 
-                            // Xử lý thông tin địa điểm làm việc
-                            String location = jobNode.path("address").asText("");
-                            if (location.isEmpty() || "null".equals(location)) {
+                            // Xử lý thông tin địa điểm làm việc và kiểm tra rỗng
+                            String location = cleanText(jobNode.path("address").asText(""));
+                            if (location.isEmpty() || "null".equalsIgnoreCase(location)) {
                                 JsonNode locationsList = jobNode.path("workingLocations");
                                 if (locationsList.isArray() && locationsList.size() > 0) {
-                                    location = locationsList.get(0).path("address").asText("Việt Nam");
+                                    location = cleanText(locationsList.get(0).path("address").asText("Việt Nam"));
                                 } else {
                                     location = "Việt Nam";
                                 }
                             }
+                            if (location.isEmpty()) {
+                                location = "Việt Nam";
+                            }
 
-                            String salary = jobNode.path("salary").asText("Thỏa thuận");
-                            String description = jobNode.path("jobDescription").asText("");
-                            String requirements = jobNode.path("jobRequirement").asText("");
+                            String salary = cleanText(jobNode.path("salary").asText("Thỏa thuận"));
+                            String description = cleanText(jobNode.path("jobDescription").asText(""));
+                            String requirements = cleanText(jobNode.path("jobRequirement").asText(""));
 
                             // Phân loại loại hình công việc (Job Type)
                             String jobType = "Full-time";
@@ -128,29 +147,29 @@ public class VietnamWorksCrawler implements JobCrawler {
                             String skills = extractSkills(title, description + " " + requirements);
 
                             JobRequest jobRequest = JobRequest.builder()
-                                    .title(title)
-                                    .companyName(companyName)
-                                    .companyLogo(companyLogo)
-                                    .location(location)
-                                    .salary(salary)
-                                    .jobType(jobType)
-                                    .description(description)
-                                    .requirements(requirements.isEmpty() ? "Ứng viên vui lòng xem mô tả chi tiết tại link gốc VietnamWorks." : requirements)
-                                    .skills(skills)
-                                    .jobUrl(jobUrl)
-                                    .provider("VIETNAMWORKS") // Đặt nhà cung cấp là VIETNAMWORKS
-                                    .build();
+                                     .title(title)
+                                     .companyName(companyName)
+                                     .companyLogo(companyLogo)
+                                     .location(location)
+                                     .salary(salary)
+                                     .jobType(jobType)
+                                     .description(description)
+                                     .requirements(requirements.isEmpty() ? "Ứng viên vui lòng xem mô tả chi tiết tại link gốc VietnamWorks." : requirements)
+                                     .skills(skills)
+                                     .jobUrl(jobUrl)
+                                     .provider("VIETNAMWORKS") // Đặt nhà cung cấp là VIETNAMWORKS
+                                     .build();
 
-                            // Gửi dữ liệu qua Feign Client sang Job Service
-                            try {
-                                jobClient.createJob(jobRequest);
-                                successCount++;
-                                if (successCount >= 50) {
-                                    break;
-                                }
-                            } catch (Exception fe) {
-                                log.error("❌ Lỗi kết nối đến Job Service: {}", fe.getMessage());
-                            }
+                             // Gửi dữ liệu qua RestTemplate sang Job Service
+                             try {
+                                 restTemplate.postForObject("http://localhost:8083/api/v1/jobs", jobRequest, JobRequest.class);
+                                 successCount++;
+                                 if (successCount >= 50) {
+                                     break;
+                                 }
+                             } catch (Exception fe) {
+                                 log.error("❌ Lỗi gửi RestTemplate cho VietnamWorks: {}", fe.getMessage());
+                             }
 
                         } catch (Exception e) {
                             log.error("❌ Lỗi khi xử lý một tin đăng của VietnamWorks: {}", e.getMessage());
@@ -175,6 +194,15 @@ public class VietnamWorksCrawler implements JobCrawler {
     @Override
     public String getProviderName() {
         return "VIETNAMWORKS";
+    }
+
+    /**
+     * Làm sạch các ký tự điều khiển ASCII đặc biệt trong chuỗi để tránh lỗi JSON format.
+     */
+    private String cleanText(String text) {
+        if (text == null) return "";
+        // Loại bỏ các ký tự điều khiển ASCII không hợp lệ (0x00 - 0x1F), ngoại trừ \n, \r, \t
+        return text.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]", "").trim();
     }
 
     /**

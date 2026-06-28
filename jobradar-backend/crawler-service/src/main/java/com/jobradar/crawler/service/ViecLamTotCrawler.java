@@ -89,7 +89,7 @@ public class ViecLamTotCrawler implements JobCrawler {
                                 .provider("VIECLAMTOT") // Đặt provider là VIECLAMTOT để đồng bộ hệ thống
                                 .build();
                         
-                        jobClient.createJob(jobRequest);
+                        restTemplate.postForObject("http://localhost:8083/api/v1/jobs", jobRequest, JobRequest.class);
                         successCount++;
                         
                     } catch (Exception e) {
