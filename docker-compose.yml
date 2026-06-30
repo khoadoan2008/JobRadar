@@ -23,6 +23,19 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
+  # Cấu hình cho FlareSolverr để vượt Cloudflare
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: jobradar_flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=Asia/Ho_Chi_Minh
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
 # Khai báo volume dùng để lưu trữ dữ liệu ổ cứng
 volumes:
   postgres_data:

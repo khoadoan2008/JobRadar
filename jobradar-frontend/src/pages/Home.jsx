@@ -116,9 +116,14 @@ const Home = () => {
               />
             </Link>
           ) : (
-            <Link to="/login" className="px-4 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold hover:brightness-110 active:scale-95 transition-all">
-              Đăng nhập
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link to="/login" className="px-4 py-1.5 rounded-full text-white text-xs font-bold hover:bg-white/5 hover:border-white/20 transition-all border border-white/10 bg-transparent cursor-pointer">
+                Đăng nhập
+              </Link>
+              <Link to="/register" className="px-4 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold hover:brightness-110 active:scale-95 transition-all border border-transparent cursor-pointer">
+                Đăng ký
+              </Link>
+            </div>
           )}
         </div>
       </header>

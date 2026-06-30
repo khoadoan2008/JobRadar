@@ -37,7 +37,7 @@
 
 *   **Online Profile & CV Builder:** Nhập thông tin tạo CV Web hoặc xuất file PDF.
 
-*   **Smart Job Recommendation:** Gợi ý việc làm tự động dựa trên mức độ phù hợp của kỹ năng hoặc từ khóa mong muốn.
+*   **Smart Job Recommendation:** Gợi ý việc làm tự động dựa trên mức độ phù hợp của kỹ năng hoặc từ khóa mong muốn (sử dụng hệ thống **Skill Dictionary phân cấp 3 tầng** để gợi ý chính xác theo chuyên môn).
 
 *   **Application Tracker:** Giao diện Kanban board theo dõi trạng thái ứng tuyển (Đã nộp, Phỏng vấn, Nhận offer, Từ chối).
 
@@ -60,7 +60,7 @@
 ### Phân hệ 4: Admin & Data Management (Dành cho Quản trị viên)
 *   **Crawler Manager Dashboard:** Quản lý, theo dõi tình trạng hoạt động và log của các luồng cào dữ liệu.
 
-*   **Keyword & Skill Dictionary:** Chuẩn hóa hệ thống từ khóa tìm kiếm (ví dụ: gộp `ReactJS`, `React.js` thành `React`; gộp `Sales Executive`, `Nhân viên bán hàng` thành `Nhân viên kinh doanh`).
+*   **Keyword & Skill Dictionary:** Chuẩn hóa hệ thống từ khóa tìm kiếm (ví dụ: gộp `ReactJS`, `React.js` thành `React`; gộp `Sales Executive`, `Nhân viên bán hàng` thành `Nhân viên kinh doanh`) và xây dựng mối quan hệ phân cấp giữa các nhóm kỹ năng phục vụ cho bộ lọc tìm kiếm nâng cao.
 
 ---
 
@@ -164,3 +164,11 @@ Quá trình Scraping bản chất là một trò chơi "Mèo vờn chuột", do 
 
 ### 8.4. Tính nhất quán Dữ liệu Phân tán (Data Consistency)
 *   Áp dụng **Saga Pattern** hoặc Eventual Consistency thông qua RabbitMQ để đảm bảo các giao dịch liên quan đến nhiều service (ví dụ: tạo profile ứng viên mới đồng thời kích hoạt đăng ký alert mặc định) được thực hiện trọn vẹn hoặc tự động rollback.
+
+### 8.5. Thiết Kế và Chuẩn Hóa Hệ Thống Skill Dictionary Phân Cấp (Skill Taxonomy)
+*   **Vấn đề:** Việc lưu kỹ năng dạng chuỗi thô (text) hoặc mảng string đơn giản trong Profile/Job sẽ dẫn đến sai lệch dữ liệu (do người dùng nhập tự do hoặc crawler cào từ nhiều nguồn khác nhau) và không thể phân nhóm chuyên môn để gợi ý việc làm thông minh.
+*   **Giải pháp (V2 - Giai đoạn làm Search & Matching):**
+    *   **Cấu trúc dữ liệu 3 tầng:** `Categories` (Ngành lớn) -> `Specialties` (Mảng chuyên môn) -> `Skills` (Kỹ năng cụ thể).
+    *   **Chuẩn hóa Database 3NF:** Tách `skills` thành các bảng độc lập và thiết lập quan hệ Nhiều-Nhiều (Many-to-Many) thông qua các bảng trung gian (`CANDIDATE_SKILLS`, `JOB_SKILLS`, `SPECIALTY_SKILLS`).
+    *   **Bí danh & Chuẩn hóa (Alias Standardizer):** Thiết lập bảng phụ `SKILL_ALIASES` để tự động map các biến thể từ khóa (ví dụ: `reactjs`, `React.js`, `react js`) về một Skill ID duy nhất khi Crawler cào tin về hoặc khi ứng viên upload CV.
+

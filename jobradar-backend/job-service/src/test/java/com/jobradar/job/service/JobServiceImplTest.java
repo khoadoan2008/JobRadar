@@ -73,7 +73,7 @@ public class JobServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Job> jobPage = new PageImpl<>(Collections.singletonList(sampleJob));
 
-        when(jobRepository.searchJobs(eq("Java"), eq("Hanoi"), any(Pageable.class)))
+        when(jobRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
                 .thenReturn(jobPage);
 
         Page<Job> result = jobService.getJobs("Java", "Hanoi", pageable);
@@ -81,7 +81,7 @@ public class JobServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertEquals("Java Developer", result.getContent().get(0).getTitle());
-        verify(jobRepository, times(1)).searchJobs("Java", "Hanoi", pageable);
+        verify(jobRepository, times(1)).findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageable));
     }
 
     @Test
@@ -118,13 +118,11 @@ public class JobServiceImplTest {
     }
 
     @Test
-    void createJob_WhenJobUrlAlreadyExists_ShouldReturnExistingJobWithoutSaving() {
+    void createJob_WhenJobUrlAlreadyExists_ShouldThrowDuplicateResourceException() {
         when(jobRepository.findByJobUrl(sampleJobRequest.getJobUrl())).thenReturn(Optional.of(sampleJob));
 
-        Job result = jobService.createJob(sampleJobRequest);
+        assertThrows(com.jobradar.job.exception.DuplicateResourceException.class, () -> jobService.createJob(sampleJobRequest));
 
-        assertNotNull(result);
-        assertEquals("Java Developer", result.getTitle());
         verify(jobRepository, times(1)).findByJobUrl(sampleJobRequest.getJobUrl());
         verify(jobRepository, never()).save(any(Job.class));
     }

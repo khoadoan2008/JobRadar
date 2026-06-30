@@ -167,6 +167,12 @@ public class VietnamWorksCrawler implements JobCrawler {
                                  if (successCount >= 50) {
                                      break;
                                  }
+                             } catch (org.springframework.web.client.HttpStatusCodeException hse) {
+                                 if (hse.getStatusCode().value() == 409) {
+                                     log.info("ℹ️ Tin tuyển dụng đã tồn tại (Trùng lặp), bỏ qua: {}", jobUrl);
+                                 } else {
+                                     log.error("❌ Lỗi HTTP từ Job Service cho VietnamWorks: {} - {}", hse.getStatusCode(), hse.getResponseBodyAsString());
+                                 }
                              } catch (Exception fe) {
                                  log.error("❌ Lỗi gửi RestTemplate cho VietnamWorks: {}", fe.getMessage());
                              }

@@ -12,4 +12,5 @@ public interface AuthService {
     UserProfileResponse getMyProfile();
     AuthResponse refreshToken(TokenRefreshRequest request);
     void logout(String email);
+    void updateSkills(String email, String skills);
 }

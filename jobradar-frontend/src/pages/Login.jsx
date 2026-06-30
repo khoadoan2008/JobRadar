@@ -95,6 +95,15 @@ const Login = () => {
             <img alt="JobRadar Logo" className="h-8 w-auto filter brightness-0 invert" src="https://lh3.googleusercontent.com/aida/AP1WRLtVnSdAdOoLFNOlLGwmyJZD--eaM5f-LwKHIA_4NuZ4nZ6j_Qc70QGdIGsJf4qwUvBNt_fh1UEUVkE67U2iB-awKuwyXmVZqIsn6Z1OmPo9FzGhP_29btSalhpMNhxrwnHcvUq7WVI1kBglzgY-Tb0Zs_zYuh7OZVc_3zv_JviLhZ1brFXAZunIta4K3UVgSDS2eJAZcYhI39fNA3K0rIsZhVWTM9ECyo5qYvplw1UIpGzbUV_--qYZzg" />
             <span className="font-headline-sm text-white font-bold tracking-tighter">JobRadar</span>
           </div>
+
+          {/* Back to Home Button */}
+          <Link 
+            to="/" 
+            className="absolute top-10 right-6 md:right-10 flex items-center gap-2 text-xs font-semibold text-on-surface-variant hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full border border-white/10 backdrop-blur-sm cursor-pointer z-20"
+          >
+            <span className="material-symbols-outlined !text-[18px]">arrow_back</span>
+            <span>Trang chủ</span>
+          </Link>
           
           <div className="w-full max-w-[480px] z-10">
             <div className="glass-card p-8 md:p-12 rounded-3xl">

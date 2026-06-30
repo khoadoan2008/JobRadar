@@ -89,9 +89,18 @@ public class ViecLamTotCrawler implements JobCrawler {
                                 .provider("VIECLAMTOT") // Đặt provider là VIECLAMTOT để đồng bộ hệ thống
                                 .build();
                         
-                        restTemplate.postForObject("http://localhost:8083/api/v1/jobs", jobRequest, JobRequest.class);
-                        successCount++;
-                        
+                        try {
+                            restTemplate.postForObject("http://localhost:8083/api/v1/jobs", jobRequest, JobRequest.class);
+                            successCount++;
+                        } catch (org.springframework.web.client.HttpStatusCodeException hse) {
+                            if (hse.getStatusCode().value() == 409) {
+                                log.info("ℹ️ Tin tuyển dụng đã tồn tại (Trùng lặp), bỏ qua: {}", jobUrl);
+                            } else {
+                                log.error("❌ Lỗi HTTP từ Job Service: {} - {}", hse.getStatusCode(), hse.getResponseBodyAsString());
+                            }
+                        } catch (Exception fe) {
+                            log.error("❌ Lỗi gửi RestTemplate cho Việc Làm Tốt: {}", fe.getMessage());
+                        }
                     } catch (Exception e) {
                         log.error("Lỗi khi xử lý một tin đăng của Việc Làm Tốt: {}", e.getMessage());
                     }

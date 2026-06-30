@@ -20,7 +20,34 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public Page<Job> getJobs(String keyword, String location, Pageable pageable) {
-        return jobRepository.searchJobs(keyword, location, pageable);
+        org.springframework.data.jpa.domain.Specification<Job> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            
+            // Lọc theo địa điểm (AND)
+            if (location != null && !location.trim().isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("location")), "%" + location.toLowerCase() + "%"));
+            }
+            
+            // Lọc theo từ khóa / danh sách kỹ năng (OR giữa các từ khóa)
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String[] parts = keyword.split("[,;]");
+                java.util.List<jakarta.persistence.criteria.Predicate> keywordPredicates = new java.util.ArrayList<>();
+                for (String part : parts) {
+                    if (part.trim().isEmpty()) continue;
+                    String cleanPart = "%" + part.trim().toLowerCase() + "%";
+                    // Tìm kiếm khớp OR với tiêu đề, công ty, hoặc kỹ năng
+                    keywordPredicates.add(cb.like(cb.lower(root.get("title")), cleanPart));
+                    keywordPredicates.add(cb.like(cb.lower(root.get("companyName")), cleanPart));
+                    keywordPredicates.add(cb.like(cb.lower(root.get("skills")), cleanPart));
+                }
+                if (!keywordPredicates.isEmpty()) {
+                    predicates.add(cb.or(keywordPredicates.toArray(new jakarta.persistence.criteria.Predicate[0])));
+                }
+            }
+            
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+        return jobRepository.findAll(spec, pageable);
     }
 
     @Override
@@ -32,12 +59,12 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public Job createJob(JobRequest jobRequest) {
-        return jobRepository.findByJobUrl(jobRequest.getJobUrl())
-                .orElseGet(() -> {
-                    Job job = new Job();
-                    mapDtoToEntity(jobRequest, job);
-                    return jobRepository.save(job);
-                });
+        if (jobRepository.findByJobUrl(jobRequest.getJobUrl()).isPresent()) {
+            throw new com.jobradar.job.exception.DuplicateResourceException("Tin tuyển dụng với URL này đã tồn tại: " + jobRequest.getJobUrl());
+        }
+        Job job = new Job();
+        mapDtoToEntity(jobRequest, job);
+        return jobRepository.save(job);
     }
 
     @Override

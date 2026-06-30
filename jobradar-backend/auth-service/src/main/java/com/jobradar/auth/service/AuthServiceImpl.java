@@ -160,4 +160,20 @@ public class AuthServiceImpl implements AuthService {
             refreshTokenService.deleteByUserId(user.getId());
         });
     }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void updateSkills(String email, String skills) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new com.jobradar.auth.exception.ResourceNotFoundException("Không tìm thấy tài khoản"));
+        
+        CandidateProfile profile = user.getCandidateProfile();
+        if (profile == null) {
+            profile = new CandidateProfile();
+            profile.setUser(user);
+            user.setCandidateProfile(profile);
+        }
+        profile.setSkills(skills);
+        profileRepository.save(profile);
+    }
 }

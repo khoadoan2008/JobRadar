@@ -6,12 +6,24 @@ const Dashboard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeSkills, setActiveSkills] = useState(['Java', 'ReactJS', 'Microservices']);
+  const [activeSkills, setActiveSkills] = useState(['Bán hàng & CSKH', 'Tin học văn phòng']);
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
+  const [jobsPage, setJobsPage] = useState(0);
+  const [hasMoreJobs, setHasMoreJobs] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
-  const skillsList = ['Java', 'ReactJS', 'Spring Boot', 'Python', 'RabbitMQ', 'Microservices'];
+  const skillsList = [
+    'Tin học văn phòng',
+    'Kế toán / Thuế',
+    'Hành chính / Nhân sự',
+    'Bán hàng & CSKH',
+    'Digital Marketing',
+    'Thiết kế đồ họa / Video',
+    'Tiếng Anh',
+    'Công nghệ thông tin'
+  ];
 
   // Lấy thông tin cá nhân của User khi đăng nhập
   useEffect(() => {
@@ -39,33 +51,53 @@ const Dashboard = () => {
     fetchProfile();
   }, []);
 
-  // Gọi API lấy danh sách job phù hợp dựa trên activeSkills
-  useEffect(() => {
-    const fetchMatchedJobs = async () => {
+  const fetchMatchedJobs = async (pageNum, isLoadMore) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
       setJobsLoading(true);
-      try {
-        // Tạo keyword tìm kiếm bằng cách gộp các active skills
-        const keyword = activeSkills.join(' ');
-        const response = await api.get('/jobs', {
-          params: {
-            keyword: keyword || null, // Nếu rỗng thì lấy job mới nhất
-            page: 0,
-            size: 5
-          }
-        });
-        setJobs(response.data.content || []);
-      } catch (err) {
-        console.error('Lỗi khi lấy danh sách job phù hợp:', err);
-      } finally {
-        setJobsLoading(false);
+    }
+    try {
+      const keyword = activeSkills.join(',');
+      const response = await api.get('/jobs', {
+        params: {
+          keyword: keyword || null,
+          page: pageNum,
+          size: 5
+        }
+      });
+      const newJobs = response.data.content || [];
+      if (isLoadMore) {
+        setJobs(prev => [...prev, ...newJobs]);
+      } else {
+        setJobs(newJobs);
       }
-    };
+      setHasMoreJobs(!response.data.last);
+    } catch (err) {
+      console.error('Lỗi khi lấy danh sách job phù hợp:', err);
+    } finally {
+      setJobsLoading(false);
+      setLoadingMore(false);
+    }
+  };
 
-    // Chỉ gọi API khi luồng tải profile đã hoàn thành
+  // Gọi API lấy danh sách job phù hợp dựa trên activeSkills khi thay đổi kỹ năng hoặc profile load xong
+  useEffect(() => {
     if (!loading) {
-      fetchMatchedJobs();
+      setJobsPage(0);
+      fetchMatchedJobs(0, false);
     }
   }, [activeSkills, loading]);
+
+  const handleLoadMore = () => {
+    if (jobsPage >= 3) {
+      navigate('/jobs');
+      return;
+    }
+    const nextPage = jobsPage + 1;
+    setJobsPage(nextPage);
+    fetchMatchedJobs(nextPage, true);
+  };
 
   const handleLogout = async () => {
     try {
@@ -95,6 +127,9 @@ const Dashboard = () => {
         return 'bg-green-500/10 text-green-400 border border-green-500/20';
       case 'VIETNAMWORKS':
         return 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+      case 'VIECLAMTOT':
+      case 'CHOTOT':
+        return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
       default:
         return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
     }
@@ -377,6 +412,28 @@ const Dashboard = () => {
                       </div>
                     </div>
                   ))}
+
+                  {hasMoreJobs && (
+                    <div className="flex-shrink-0 w-[200px] snap-start flex flex-col items-center justify-center p-6 rounded-3xl bg-slate-900/20 border border-dashed border-white/10 hover:border-primary/30 transition-all">
+                      <button
+                        onClick={handleLoadMore}
+                        disabled={loadingMore}
+                        className="w-14 h-14 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:border-primary/50 hover:bg-primary/20 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50 mb-3"
+                        title={jobsPage >= 3 ? "Xem tất cả tin tuyển dụng" : "Tải thêm công việc"}
+                      >
+                        {loadingMore ? (
+                          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                          <span className="material-symbols-outlined text-2xl">
+                            {jobsPage >= 3 ? "search" : "arrow_forward"}
+                          </span>
+                        )}
+                      </button>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                        {jobsPage >= 3 ? "Xem tất cả" : "Tải thêm"}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </section>
@@ -384,24 +441,26 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-10">
               {/* Skill Alert Matrix */}
               <div className="glass-card rounded-3xl p-8 border border-white/5">
-                <h3 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em] mb-8">Skill Radar Cloud</h3>
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Skill Radar Cloud</h3>
+                  <Link to="/skills" className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                    Xem thêm <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                  </Link>
+                </div>
+                
                 <div className="flex flex-wrap gap-4">
-                  {skillsList.map((skill) => {
-                    const isActive = activeSkills.includes(skill);
-                    return (
-                      <button 
-                        key={skill}
-                        onClick={() => toggleSkill(skill)}
-                        className={`skill-bubble px-4 py-2 rounded-full border border-white/10 text-sm font-semibold flex items-center gap-2 transition-all ${
-                          isActive ? 'active' : 'text-slate-400 hover:border-white/20'
-                        }`}
-                      >
-                        {isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>} 
-                        {skill}
-                      </button>
-                    );
-                  })}
-                  <button className="px-4 py-2 rounded-full border border-dashed border-white/20 text-slate-500 text-sm font-bold hover:text-white hover:border-white/40 transition-all">+ Thêm</button>
+                  {activeSkills.map((skill) => (
+                    <div 
+                      key={skill}
+                      className="skill-bubble active px-4 py-2 rounded-full border border-primary/30 text-primary bg-primary/10 text-sm font-semibold flex items-center gap-2"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                      {skill}
+                    </div>
+                  ))}
+                  {activeSkills.length === 0 && (
+                    <p className="text-slate-500 text-sm italic">Chưa cấu hình nhận cảnh báo việc làm. Vui lòng bấm "Xem thêm" để chọn kỹ năng.</p>
+                  )}
                 </div>
               </div>
 
@@ -458,12 +517,12 @@ const Dashboard = () => {
             <span className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg text-[10px] text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10 uppercase tracking-widest">CV Builder</span>
           </a>
           
-          <a className="dock-item group relative" href="#">
+          <Link className="dock-item group relative" to="/jobs">
             <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 hover:border-white/30 transition-all">
-              <span className="material-symbols-outlined text-slate-400 group-hover:text-white text-3xl transition-colors">rocket_launch</span>
+              <span className="material-symbols-outlined text-slate-400 group-hover:text-white text-3xl transition-colors">work</span>
             </div>
-            <span className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg text-[10px] text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10 uppercase tracking-widest">Ứng tuyển</span>
-          </a>
+            <span className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg text-[10px] text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10 uppercase tracking-widest">Việc làm</span>
+          </Link>
           
           <a className="dock-item group relative" href="#">
             <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 hover:border-white/30 transition-all">

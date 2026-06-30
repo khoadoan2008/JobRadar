@@ -49,3 +49,8 @@ target/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Debug files
+raw_*.json
+jobradar-frontend/css_output.txt
+jobradar-frontend/test.css

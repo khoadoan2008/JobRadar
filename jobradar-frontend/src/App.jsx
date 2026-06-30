@@ -5,6 +5,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import OAuth2Redirect from './pages/OAuth2Redirect';
 import Home from './pages/Home';
+import SelectSkills from './pages/SelectSkills';
+import Jobs from './pages/Jobs';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
+        <Route path="/skills" element={<SelectSkills />} />
+        <Route path="/jobs" element={<Jobs />} />
       </Routes>
     </BrowserRouter>
   );

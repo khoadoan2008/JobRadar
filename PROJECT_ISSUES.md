@@ -84,5 +84,7 @@ File này dùng để theo dõi tất cả các vấn đề (Issues), các tính
 - [x] Triển khai thành công bộ cào tin `ViecLamTotCrawler` lấy tin từ API JSON công khai của Việc Làm Tốt.
 - [x] Tạo `CrawlerController` cung cấp API `/api/v1/crawler/crawl` để trigger bộ cào thủ công.
 - [x] Triển khai bộ cào HTML `VietnamWorksCrawler` sử dụng JSoup.
-- [ ] Triển khai bộ cào HTML `TopCVCrawler` sử dụng JSoup.
+- [x] Triển khai bộ cào HTML `TopCVCrawler` sử dụng JSoup.
+- [x] Khắc phục lỗi trùng lặp dữ liệu & cào thiếu số lượng tin tuyển dụng (Tích hợp HTTP 409 Conflict, cải tiến exception handling cho các bộ cào).
+- [x] Chuyển đổi TopCV Crawler sang trang `/tim-viec-lam-moi-nhat` để lấy đủ 50 tin mới thực tế, tối ưu hóa độ sâu của Smart Parser (lên 10 cấp parent) và lazy load logo.
 - [ ] Tích hợp **FlareSolverr** qua Docker để vượt Cloudflare cào tin từ ITviec.

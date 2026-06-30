@@ -20,14 +20,15 @@ public class CrawlerController {
     @GetMapping("/crawl")
     public ResponseEntity<String> triggerCrawl(@RequestParam(required = false) String source) {
         if (source != null) {
+            String cleanSource = source.trim();
             JobCrawler targetCrawler = crawlers.stream()
-                    .filter(c -> c.getProviderName().equalsIgnoreCase(source))
+                    .filter(c -> c.getProviderName().equalsIgnoreCase(cleanSource))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bộ cào phù hợp cho nguồn: " + source));
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bộ cào phù hợp cho nguồn: " + cleanSource));
             
             // Chạy bất đồng bộ trong thread mới để tránh block HTTP response
             new Thread(targetCrawler::crawl).start();
-            return ResponseEntity.ok("Đã kích hoạt tiến trình cào dữ liệu cho nguồn: " + source.toUpperCase());
+            return ResponseEntity.ok("Đã kích hoạt tiến trình cào dữ liệu cho nguồn: " + cleanSource.toUpperCase());
         }
 
         // Nếu không truyền source, chạy tất cả crawlers

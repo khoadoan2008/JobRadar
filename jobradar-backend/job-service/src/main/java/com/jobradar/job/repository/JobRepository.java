@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface JobRepository extends JpaRepository<Job, Long> {
+public interface JobRepository extends JpaRepository<Job, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Job> {
 
     Optional<Job> findByJobUrl(String jobUrl);
 

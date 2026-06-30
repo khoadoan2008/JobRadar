@@ -53,4 +53,12 @@ public class AuthController {
         
         return ResponseEntity.ok(java.util.Map.of("message", "Đăng xuất thành công"));
     }
+
+    @PutMapping("/skills")
+    public ResponseEntity<Void> updateSkills(@RequestBody java.util.Map<String, String> requestBody) {
+        org.springframework.security.core.Authentication auth = 
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        authService.updateSkills(auth.getName(), requestBody.get("skills"));
+        return ResponseEntity.ok().build();
+    }
 }
